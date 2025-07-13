@@ -12,10 +12,6 @@
             font-family: var(--font-sans);
             background: radial-gradient(circle at top left, #eef3ff, #cdd8f6);
         }
-        body.dark {
-            background: #0b1120;
-            color: #e2e8f0;
-        }
     </style>
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
         @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/weather.js'])

@@ -2,6 +2,9 @@ import 'leaflet/dist/leaflet.js';
 
 let map;
 let overlay;
+let rainFrames = [];
+let rainHost = '';
+let currentFrame = 0;
 
 export async function fetchWeather(params) {
     const query = new URLSearchParams(params);
@@ -35,8 +38,8 @@ export async function updateMapLayer(layer) {
         overlay = null;
     }
     if (layer === 'radar') {
-        overlay = await addRainViewerLayer(map);
-        return;
+        await loadRainViewerFrames();
+        return setRadarFrame(rainFrames.length - 1);
     }
     overlay = L.tileLayer(`https://tile.openweathermap.org/map/${layer}/{z}/{x}/{y}.png?appid=${window.openWeatherKey}`, {
         maxZoom: 19,
@@ -44,31 +47,33 @@ export async function updateMapLayer(layer) {
     }).addTo(map);
 }
 
-export async function addRainViewerLayer(map) {
+async function loadRainViewerFrames() {
+    if (rainFrames.length) return;
     try {
         const res = await fetch('https://api.rainviewer.com/public/weather-maps.json');
         const json = await res.json();
-        const past = json.radar.past;
-        if (!past || !past.length) return;
-        const last = past[past.length - 1];
-        const url = `${json.host}${last.path}/512/{z}/{x}/{y}/2/1_1.png`;
-        const layer = L.tileLayer(url, { maxZoom: 12, opacity: 0.6 });
-        layer.addTo(map);
-        return layer;
+        rainFrames = json.radar.past || [];
+        rainHost = json.host;
     } catch (e) {
-        console.error('RainViewer layer failed', e);
+        console.error('RainViewer frames failed', e);
     }
 }
 
-export function setupTheme(buttonId) {
-    const btn = document.getElementById(buttonId);
-    const body = document.body;
-    const stored = localStorage.getItem('theme');
-    if (stored === 'dark') body.classList.add('dark');
-    if (btn) {
-        btn.addEventListener('click', () => {
-            body.classList.toggle('dark');
-            localStorage.setItem('theme', body.classList.contains('dark') ? 'dark' : 'light');
-        });
+export function getRainViewerFrameCount() {
+    return rainFrames.length;
+}
+
+export function setRadarFrame(index) {
+    if (!map || !rainFrames.length) return;
+    if (index < 0 || index >= rainFrames.length) return;
+    if (overlay) {
+        map.removeLayer(overlay);
+        overlay = null;
     }
+    const frame = rainFrames[index];
+    const url = `${rainHost}${frame.path}/512/{z}/{x}/{y}/2/1_1.png`;
+    overlay = L.tileLayer(url, { maxZoom: 12, opacity: 0.6 });
+    overlay.addTo(map);
+    currentFrame = index;
+    return overlay;
 }
