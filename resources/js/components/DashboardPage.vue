@@ -17,7 +17,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { GridLayout, GridItem } from 'vue-grid-layout';
+import { GridLayout, GridItem } from 'vue3-grid-layout';
 import WidgetTemperature from './WidgetTemperature.vue';
 import WidgetGraph from './WidgetGraph.vue';
 import WidgetTable from './WidgetTable.vue';
