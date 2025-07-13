@@ -1,5 +1,5 @@
 <template>
-  <div class="flex h-screen" id="app-root">
+  <div class="flex h-full" id="app-root">
     <aside class="w-80 bg-white/70 backdrop-blur p-4 overflow-y-auto space-y-4">
       <h1 class="text-xl font-bold mb-2">{{ trans.title }}</h1>
       <SearchLocation />
