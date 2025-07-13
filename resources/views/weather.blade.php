@@ -7,8 +7,15 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="anonymous"/>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <style>
+        html,
         body {
-            background: radial-gradient(circle at top left, #f0f4ff, #d9e3f7);
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            font-family: var(--font-sans);
+            background: radial-gradient(circle at top left, #eef3ff, #cdd8f6);
         }
 
         body.dark {
@@ -19,15 +26,36 @@
         body.dark .card {
             background-color: #1e293b;
         }
+
+        body.dark #sidebar {
+            background-color: #1e293b;
+        }
+
+        body.dark .bg-opacity-75 {
+            background-color: rgba(30, 41, 59, 0.9) !important;
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+
+        #sidebar {
+            width: 350px;
+            max-width: 100%;
+            z-index: 1000;
+            overflow-y: auto;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.15);
+        }
     </style>
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
         @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/weather.js'])
     @endif
 </head>
-<body class="py-5">
-<div class="container" style="max-width: 768px;">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="display-5 fw-bold mb-0">{{ __('weather.title') }}</h1>
+<body class="d-flex">
+<div id="sidebar" class="bg-white bg-opacity-75 p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h3 fw-bold mb-0">{{ __('weather.title') }}</h1>
         <button id="theme-toggle" class="btn btn-outline-secondary" title="{{ __('weather.toggle_theme') }}">🌓</button>
     </div>
     <div class="input-group mb-3">
@@ -52,17 +80,17 @@
     <div id="forecast" class="card mb-3" style="display:none;">
         <div class="card-body"></div>
     </div>
-    <div id="map" class="mb-1" style="height: 16rem;"></div>
     <p class="text-end text-muted small mb-3">{!! __('weather.radar_credit') !!}</p>
     @if($locations->count())
-        <h2 class="h4 fw-semibold">{{ __('weather.recent_searches') }}</h2>
-        <ul class="list-group">
+        <h2 class="h5 fw-semibold">{{ __('weather.recent_searches') }}</h2>
+        <ul class="list-group list-group-flush">
             @foreach($locations as $loc)
                 <li class="list-group-item">{{ $loc->name }} ({{ $loc->latitude }}, {{ $loc->longitude }})</li>
             @endforeach
         </ul>
     @endif
 </div>
+<div id="map" class="flex-fill position-relative"></div>
 <script>
     window.openWeatherKey = "{{ $openWeatherKey }}";
     window.trans = {
