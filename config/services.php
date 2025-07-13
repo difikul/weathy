@@ -32,6 +32,14 @@ return [
         'key' => env('OPENWEATHER_API_KEY'),
     ],
 
+    'openmeteo' => [
+        'base_url' => 'https://api.open-meteo.com',
+    ],
+
+    'metno' => [
+        'base_url' => 'https://api.met.no',
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

@@ -1,10 +1,12 @@
 import { defineStore } from 'pinia';
-import { fetchWeather, fetchForecast } from '../weather';
+import { fetchWeather, fetchForecast, fetchCombined } from '../weather';
 
 export const useWeatherStore = defineStore('weather', {
   state: () => ({
     current: null,
     forecast: [],
+    combined: {},
+    layer: 'precipitation_new',
   }),
   actions: {
     async loadByCity(city) {
@@ -21,6 +23,12 @@ export const useWeatherStore = defineStore('weather', {
       if (this.current.coord) {
         this.forecast = await fetchForecast({ lat, lon });
       }
+    },
+    async loadCombined(lat, lon) {
+      this.combined = await fetchCombined({ lat, lon });
+    },
+    setLayer(l) {
+      this.layer = l;
     },
   },
 });

@@ -1,6 +1,6 @@
 # Weathy
 
-Weathy is a Laravel 10 and Vue 3 application for exploring weather data. The frontend is powered by Vite, Tailwind CSS and Vue with Pinia state management. Weather information is retrieved from the OpenWeatherMap API.
+Weathy is a Laravel 10 and Vue 3 application for exploring weather data. The frontend is powered by Vite, Tailwind CSS and Vue with Pinia state management. Weather information is retrieved from multiple APIs including OpenWeatherMap, Open‑Meteo and MET Norway.
 
 ## Local development
 
@@ -32,6 +32,14 @@ Run the automated test suite with:
 
 ```bash
 php artisan test
+```
+
+### Aggregated weather data
+
+The `/api/combined` endpoint returns current weather from Open‑Meteo and MET Norway. Example request:
+
+```bash
+curl "http://localhost:8000/api/combined?lat=50.1&lon=14.4"
 ```
 
 ## Continuous Integration

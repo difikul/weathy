@@ -4,12 +4,14 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "dev": "vite"
+    "dev": "vite",
+    "lint": "eslint resources/js --ext .js,.vue"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.0.0",
     "axios": "^1.8.2",
     "concurrently": "^9.0.1",
+    "eslint": "^8.56.0",
     "laravel-vite-plugin": "^1.2.0",
     "leaflet": "^1.9.4",
     "tailwindcss": "^4.0.0",
@@ -17,8 +19,8 @@
   },
   "dependencies": {
     "@vitejs/plugin-vue": "^5.2.4",
-    "vue": "^3.5.17",
     "pinia": "^3.0.3",
+    "vue": "^3.5.17",
     "vue-router": "^4.5.1"
   }
 }
