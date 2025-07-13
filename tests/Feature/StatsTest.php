@@ -26,5 +26,12 @@ class StatsTest extends TestCase
 
         $response = $this->get('/api/stats');
         $response->assertStatus(200);
+        $response->assertExactJson([
+            'temperature' => 10.0,
+            'humidity' => 50.0,
+            'wind_speed' => 1.0,
+            'pressure' => 1010.0,
+            'precipitation' => 0.0,
+        ]);
     }
 }
