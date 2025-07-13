@@ -9,5 +9,12 @@ return [
     'wind' => 'Wind Speed',
     'radar_credit' => 'Radar data © <a href="https://www.rainviewer.com" target="_blank" rel="noopener">RainViewer</a>',
     'toggle_theme' => 'Toggle theme',
-    'forecast' => '5 Day Forecast'
+    'forecast' => '5 Day Forecast',
+    'map_layer' => 'Map Layer',
+    'layer_precipitation' => 'Precipitation',
+    'layer_temperature' => 'Temperature',
+    'layer_wind' => 'Wind',
+    'layer_clouds' => 'Clouds',
+    'layer_pressure' => 'Pressure',
+    'layer_radar' => 'Rain Radar',
 ];

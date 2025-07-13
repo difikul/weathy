@@ -1,5 +1,9 @@
 import 'leaflet/dist/leaflet.js';
 
+let map;
+let overlay;
+let currentCoords;
+
 function showWeather(data) {
     const card = document.getElementById('weather');
     const box = card.querySelector('.card-body');
@@ -21,7 +25,8 @@ async function fetchWeather(params) {
     const json = await res.json();
     showWeather(json);
     if (json.coord) {
-        initMap(json.coord.lat, json.coord.lon);
+        currentCoords = { lat: json.coord.lat, lon: json.coord.lon };
+        initMap(currentCoords.lat, currentCoords.lon);
         fetchForecast({lat: json.coord.lat, lon: json.coord.lon});
     }
 }
@@ -57,23 +62,34 @@ function showForecast(data) {
     box.innerHTML = html;
 }
 
-function initMap(lat, lon) {
+async function initMap(lat, lon) {
     const mapDiv = document.getElementById('map');
-    mapDiv.innerHTML = '';
-    const map = L.map(mapDiv).setView([lat, lon], 8);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; OpenStreetMap'
-    }).addTo(map);
-    L.tileLayer(`https://tile.openweathermap.org/map/precipitation_new/{z}/{x}/{y}.png?appid=${window.openWeatherKey}`, {
+    if (!map) {
+        map = L.map(mapDiv).setView([lat, lon], 8);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; OpenStreetMap'
+        }).addTo(map);
+    } else {
+        map.setView([lat, lon], 8);
+    }
+    await updateMapLayer(document.getElementById('layer').value);
+}
+
+async function updateMapLayer(layer) {
+    if (!map) return;
+    if (overlay) {
+        map.removeLayer(overlay);
+        overlay = null;
+    }
+    if (layer === 'radar') {
+        overlay = await addRainViewerLayer(map);
+        return;
+    }
+    overlay = L.tileLayer(`https://tile.openweathermap.org/map/${layer}/{z}/{x}/{y}.png?appid=${window.openWeatherKey}`, {
         maxZoom: 19,
         opacity: 0.5
     }).addTo(map);
-    L.tileLayer(`https://tile.openweathermap.org/map/lightning_new/{z}/{x}/{y}.png?appid=${window.openWeatherKey}`, {
-        maxZoom: 19,
-        opacity: 0.7
-    }).addTo(map);
-    addRainViewerLayer(map);
 }
 
 async function addRainViewerLayer(map) {
@@ -84,7 +100,9 @@ async function addRainViewerLayer(map) {
         if (!past || !past.length) return;
         const last = past[past.length - 1];
         const url = `${json.host}${last.path}/512/{z}/{x}/{y}/2/1_1.png`;
-        L.tileLayer(url, { maxZoom: 12, opacity: 0.6 }).addTo(map);
+        const layer = L.tileLayer(url, { maxZoom: 12, opacity: 0.6 });
+        layer.addTo(map);
+        return layer;
     } catch (e) {
         console.error('RainViewer layer failed', e);
     }
@@ -99,6 +117,10 @@ document.getElementById('current').addEventListener('click', () => {
     navigator.geolocation.getCurrentPosition(pos => {
         fetchWeather({lat: pos.coords.latitude, lon: pos.coords.longitude});
     });
+});
+
+document.getElementById('layer').addEventListener('change', e => {
+    updateMapLayer(e.target.value);
 });
 
 function setupTheme() {

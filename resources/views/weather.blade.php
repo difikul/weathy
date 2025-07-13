@@ -35,6 +35,17 @@
         <button id="search" class="btn btn-primary">{{ __('weather.get_weather') }}</button>
         <button id="current" class="btn btn-success">{{ __('weather.use_location') }}</button>
     </div>
+    <div class="mb-3">
+        <label for="layer" class="form-label">{{ __('weather.map_layer') }}</label>
+        <select id="layer" class="form-select">
+            <option value="precipitation_new">{{ __('weather.layer_precipitation') }}</option>
+            <option value="temp_new">{{ __('weather.layer_temperature') }}</option>
+            <option value="wind_new">{{ __('weather.layer_wind') }}</option>
+            <option value="clouds_new">{{ __('weather.layer_clouds') }}</option>
+            <option value="pressure_new">{{ __('weather.layer_pressure') }}</option>
+            <option value="radar">{{ __('weather.layer_radar') }}</option>
+        </select>
+    </div>
     <div id="weather" class="card mb-3" style="display:none;">
         <div class="card-body"></div>
     </div>

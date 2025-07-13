@@ -9,5 +9,12 @@ return [
     'wind' => 'Rychlost větru',
     'radar_credit' => 'Radarová data © <a href="https://www.rainviewer.com" target="_blank" rel="noopener">RainViewer</a>',
     'toggle_theme' => 'Přepnout téma',
-    'forecast' => 'Předpověď na 5 dní'
+    'forecast' => 'Předpověď na 5 dní',
+    'map_layer' => 'Vrstva mapy',
+    'layer_precipitation' => 'Srážky',
+    'layer_temperature' => 'Teplota',
+    'layer_wind' => 'Vítr',
+    'layer_clouds' => 'Oblačnost',
+    'layer_pressure' => 'Tlak',
+    'layer_radar' => 'Srážkový radar',
 ];
