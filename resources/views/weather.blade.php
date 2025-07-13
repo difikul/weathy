@@ -5,25 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weather App</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-o7MgGQ8Bkzs3NLe9FPd1njO9wVLfWkxZQELRkRf6rxk=" crossorigin=""/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-iKeMn0nuWH3N1Lr2AIwxHpcMYnQHzyqB1u9smlUYGsJDmTBYe7T6x0xUR3BU0SLs" crossorigin="anonymous">
+    <style>
+        body {
+            background: radial-gradient(circle at top left, #f0f4ff, #d9e3f7);
+        }
+    </style>
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
         @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/weather.js'])
     @endif
 </head>
-<body class="p-6">
-<div class="max-w-xl mx-auto space-y-4">
-    <h1 class="text-2xl font-bold">Weather Tracker</h1>
-    <div>
-        <input id="city" type="text" placeholder="Enter city" class="border p-2 w-2/3" />
-        <button id="search" class="bg-blue-500 text-white px-4 py-2">Get Weather</button>
-        <button id="current" class="bg-green-500 text-white px-4 py-2">Use My Location</button>
+<body class="py-5">
+<div class="container" style="max-width: 768px;">
+    <h1 class="display-5 fw-bold mb-4 text-center">Weather Tracker</h1>
+    <div class="input-group mb-3">
+        <input id="city" type="text" class="form-control" placeholder="Enter city">
+        <button id="search" class="btn btn-primary">Get Weather</button>
+        <button id="current" class="btn btn-success">Use My Location</button>
     </div>
-    <div id="weather" class="p-4 border rounded"></div>
-    <div id="map" class="h-64"></div>
+    <div id="weather" class="card mb-3" style="display:none;">
+        <div class="card-body"></div>
+    </div>
+    <div id="map" class="mb-3" style="height: 16rem;"></div>
     @if($locations->count())
-        <h2 class="text-xl font-semibold mt-6">Recent Searches</h2>
-        <ul>
+        <h2 class="h4 fw-semibold">Recent Searches</h2>
+        <ul class="list-group">
             @foreach($locations as $loc)
-                <li>{{ $loc->name }} ({{ $loc->latitude }}, {{ $loc->longitude }})</li>
+                <li class="list-group-item">{{ $loc->name }} ({{ $loc->latitude }}, {{ $loc->longitude }})</li>
             @endforeach
         </ul>
     @endif
@@ -31,5 +39,6 @@
 <script>
     window.openWeatherKey = "{{ $openWeatherKey }}";
 </script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-3xjUJoSKC7cUIGBTLr0StIqDZV+nMGoy+fZeycGQ21MCH/PaVKq+Zp5BULBuEqRZ" crossorigin="anonymous"></script>
 </body>
 </html>

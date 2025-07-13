@@ -1,10 +1,13 @@
 import 'leaflet/dist/leaflet.js';
 
 function showWeather(data) {
-    const box = document.getElementById('weather');
+    const card = document.getElementById('weather');
+    const box = card.querySelector('.card-body');
+    card.style.display = 'block';
     if (data.weather) {
-        box.innerHTML = `<p><strong>${data.name}</strong> - ${data.weather[0].description}</p>
-            <p>Temperature: ${data.main.temp} °C</p>`;
+        box.innerHTML = `<h5 class="card-title">${data.name}</h5>` +
+            `<p class="card-text">${data.weather[0].description}</p>` +
+            `<p class="card-text"><strong>${data.main.temp}&nbsp;°C</strong></p>`;
     } else {
         box.textContent = data.error || 'No data';
     }
