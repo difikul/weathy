@@ -6,7 +6,8 @@ use App\Models\WeatherLog;
 use Carbon\Carbon;
 use Carbon\CarbonPeriod;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Http;
+use GuzzleHttp\Client;
+use GuzzleHttp\Pool;
 use Illuminate\Support\Str;
 
 class ImportWeatherHistory extends Command
@@ -39,33 +40,86 @@ class ImportWeatherHistory extends Command
         }
 
         $period = new CarbonPeriod($from, $to);
+
+        $dates = iterator_to_array($period);
+        $total = count($dates);
+
         $saved = 0;
         $skipped = 0;
 
-        $this->withProgressBar($period, function (Carbon $date) use (&$saved, &$skipped, $lat, $lon, $source) {
-            if (WeatherLog::where('source', $source)->whereDate('timestamp', $date->toDateString())->exists()) {
-                $skipped++;
-                return;
+        $client = new Client(['base_uri' => 'https://archive-api.open-meteo.com']);
+
+        $this->output->progressStart($total);
+
+        $requests = function () use ($dates, $lat, $lon, $client) {
+            foreach ($dates as $date) {
+                yield function () use ($client, $date, $lat, $lon) {
+                    return $client->getAsync('/v1/archive', [
+                        'query' => [
+                            'latitude' => $lat,
+                            'longitude' => $lon,
+                            'start_date' => $date->toDateString(),
+                            'end_date' => $date->toDateString(),
+                            'hourly' => 'temperature_2m,relative_humidity_2m,windspeed_10m,pressure_msl,precipitation',
+                            'timezone' => 'UTC',
+                        ],
+                        'timeout' => 10,
+                    ]);
+                };
             }
+        };
 
-            $data = $this->fetchDay($date, $lat, $lon);
-            if ($data === null) {
+        $indexToDate = array_values($dates);
+
+        $pool = new Pool($client, $requests(), [
+            'concurrency' => 5,
+            'fulfilled' => function ($response, $index) use (&$saved, &$skipped, $indexToDate, $lat, $lon, $source) {
+                $date = $indexToDate[$index];
+                if (WeatherLog::where('source', $source)->whereDate('timestamp', $date->toDateString())->exists()) {
+                    $skipped++;
+                    $this->output->progressAdvance();
+                    return;
+                }
+
+                $json = json_decode($response->getBody()->getContents(), true);
+                $hourly = $json['hourly'] ?? null;
+                if (!is_array($hourly) || empty($hourly['time'])) {
+                    $skipped++;
+                    $this->output->progressAdvance();
+                    return;
+                }
+
+                $count = count($hourly['time']);
+                if ($count === 0) {
+                    $skipped++;
+                    $this->output->progressAdvance();
+                    return;
+                }
+
+                WeatherLog::create([
+                    'id' => (string) Str::uuid(),
+                    'temperature' => round(array_sum($hourly['temperature_2m']) / $count, 2),
+                    'humidity' => round(array_sum($hourly['relative_humidity_2m']) / $count),
+                    'wind_speed' => round(array_sum($hourly['windspeed_10m']) / $count, 2),
+                    'pressure' => round(array_sum($hourly['pressure_msl']) / $count),
+                    'precipitation' => round(array_sum($hourly['precipitation']) / $count, 2),
+                    'lat' => $lat,
+                    'lon' => $lon,
+                    'source' => $source,
+                    'timestamp' => $date->startOfDay()->toDateTimeString(),
+                ]);
+                $saved++;
+                $this->output->progressAdvance();
+            },
+            'rejected' => function ($reason, $index) use (&$skipped) {
                 $skipped++;
-                return;
-            }
+                $this->output->progressAdvance();
+            },
+        ]);
 
-            WeatherLog::create(array_merge($data, [
-                'id' => (string) Str::uuid(),
-                'lat' => $lat,
-                'lon' => $lon,
-                'source' => $source,
-                'timestamp' => $date->startOfDay()->toDateTimeString(),
-            ]));
-            $saved++;
-            sleep(1);
-        });
+        $pool->promise()->wait();
 
-        $total = $period->count();
+        $this->output->progressFinish();
         $this->newLine();
         $this->info("Processed {$total} days");
         $this->info("Saved: {$saved}");
@@ -74,38 +128,4 @@ class ImportWeatherHistory extends Command
         return Command::SUCCESS;
     }
 
-    protected function fetchDay(Carbon $date, float $lat, float $lon): ?array
-    {
-        $response = Http::baseUrl('https://archive-api.open-meteo.com')
-            ->get('/v1/archive', [
-                'latitude' => $lat,
-                'longitude' => $lon,
-                'start_date' => $date->toDateString(),
-                'end_date' => $date->toDateString(),
-                'hourly' => 'temperature_2m,relative_humidity_2m,windspeed_10m,pressure_msl,precipitation',
-                'timezone' => 'UTC',
-            ]);
-
-        if (!$response->successful()) {
-            return null;
-        }
-
-        $hourly = $response->json('hourly');
-        if (!is_array($hourly) || empty($hourly['time'])) {
-            return null;
-        }
-
-        $count = count($hourly['time']);
-        if ($count === 0) {
-            return null;
-        }
-
-        return [
-            'temperature' => round(array_sum($hourly['temperature_2m']) / $count, 2),
-            'humidity' => round(array_sum($hourly['relative_humidity_2m']) / $count),
-            'wind_speed' => round(array_sum($hourly['windspeed_10m']) / $count, 2),
-            'pressure' => round(array_sum($hourly['pressure_msl']) / $count),
-            'precipitation' => round(array_sum($hourly['precipitation']) / $count, 2),
-        ];
-    }
 }
