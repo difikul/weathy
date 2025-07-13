@@ -24,6 +24,12 @@ export async function fetchCombined(params) {
     return res.json();
 }
 
+export async function fetchStats(params) {
+    const query = new URLSearchParams(params);
+    const res = await fetch(`/api/stats?${query}`);
+    return res.json();
+}
+
 export async function initMap(lat, lon) {
     const mapDiv = document.getElementById('map');
     if (!map) {

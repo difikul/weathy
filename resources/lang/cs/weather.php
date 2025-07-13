@@ -17,4 +17,9 @@ return [
     'layer_clouds' => 'Oblačnost',
     'layer_pressure' => 'Tlak',
     'layer_radar' => 'Srážkový radar',
+    'stats_title' => 'Statistiky',
+    'stats_average' => 'Průměrná teplota',
+    'stats_min' => 'Minimální teplota',
+    'stats_max' => 'Maximální teplota',
+    'stats_predicted' => 'Předpověď',
 ];

@@ -10,7 +10,7 @@
             height: 100%;
             margin: 0;
             font-family: var(--font-sans);
-            background: radial-gradient(circle at top left, #eef3ff, #cdd8f6);
+            background: linear-gradient(to bottom, #f0f4ff, #d9e4ff);
         }
     </style>
     @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))

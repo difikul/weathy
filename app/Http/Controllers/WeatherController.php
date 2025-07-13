@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Date;
 use App\Models\Location;
+use App\Models\WeatherLog;
 use App\Services\WeatherAggregator;
 
 class WeatherController extends Controller
@@ -82,6 +84,18 @@ class WeatherController extends Controller
             'units' => 'metric',
             'appid' => $apiKey,
         ])->json();
+
+        WeatherLog::create([
+            'temperature' => $weather['main']['temp'] ?? null,
+            'humidity' => $weather['main']['humidity'] ?? null,
+            'wind_speed' => $weather['wind']['speed'] ?? null,
+            'pressure' => $weather['main']['pressure'] ?? null,
+            'precipitation' => $weather['rain']['1h'] ?? 0,
+            'lat' => $lat,
+            'lon' => $lon,
+            'source' => 'openweathermap',
+            'timestamp' => Date::now(),
+        ]);
 
         return response()->json($weather);
     }
@@ -162,5 +176,29 @@ class WeatherController extends Controller
         $data = $this->aggregator->aggregate($request->lat, $request->lon);
 
         return response()->json($data);
+    }
+
+    /**
+     * Return aggregated statistics from stored weather logs.
+     */
+    public function stats(Request $request)
+    {
+        $period = (int) ($request->get('period', 7));
+        $from = Date::now()->subDays($period);
+
+        $logs = WeatherLog::where('timestamp', '>=', $from)->get();
+
+        if ($logs->isEmpty()) {
+            return response()->json([]);
+        }
+
+        $stats = [
+            'avg_temp' => round($logs->avg('temperature'), 1),
+            'min_temp' => round($logs->min('temperature'), 1),
+            'max_temp' => round($logs->max('temperature'), 1),
+            'predicted_temp' => round($logs->avg('temperature'), 1),
+        ];
+
+        return response()->json($stats);
     }
 }
