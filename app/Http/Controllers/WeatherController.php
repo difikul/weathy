@@ -188,7 +188,17 @@ class WeatherController extends Controller
             ->selectRaw('AVG(temperature) as temperature, AVG(humidity) as humidity, AVG(wind_speed) as wind_speed, AVG(pressure) as pressure, AVG(precipitation) as precipitation')
             ->first();
 
-        return response()->json($avg ?? []);
+        if (!$avg) {
+            return response()->json([]);
+        }
+
+        return response()->json([
+            'temperature' => (float) $avg->temperature,
+            'humidity' => (float) $avg->humidity,
+            'wind_speed' => (float) $avg->wind_speed,
+            'pressure' => (float) $avg->pressure,
+            'precipitation' => (float) $avg->precipitation,
+        ]);
     }
 
     /**
