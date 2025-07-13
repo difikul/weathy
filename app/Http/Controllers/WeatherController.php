@@ -12,8 +12,11 @@ class WeatherController extends Controller
     /**
      * Display the weather application page.
      */
-    public function index()
+    public function index(Request $request)
     {
+        $lang = $request->query('lang', config('app.locale'));
+        app()->setLocale($lang);
+
         $locations = Location::orderByDesc('created_at')->get();
 
         return view('weather', [
