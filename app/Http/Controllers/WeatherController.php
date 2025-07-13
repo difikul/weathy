@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use App\Models\Location;
+use App\Models\WeatherLog;
+use Illuminate\Support\Str;
 use App\Services\WeatherAggregator;
 
 class WeatherController extends Controller
@@ -82,6 +84,19 @@ class WeatherController extends Controller
             'units' => 'metric',
             'appid' => $apiKey,
         ])->json();
+
+        WeatherLog::create([
+            'id' => (string) Str::uuid(),
+            'temperature' => $weather['main']['temp'] ?? 0,
+            'humidity' => $weather['main']['humidity'] ?? 0,
+            'wind_speed' => $weather['wind']['speed'] ?? 0,
+            'pressure' => $weather['main']['pressure'] ?? 0,
+            'precipitation' => $weather['rain']['1h'] ?? ($weather['snow']['1h'] ?? 0),
+            'lat' => $lat,
+            'lon' => $lon,
+            'source' => 'openweathermap',
+            'timestamp' => now(),
+        ]);
 
         return response()->json($weather);
     }
@@ -162,5 +177,36 @@ class WeatherController extends Controller
         $data = $this->aggregator->aggregate($request->lat, $request->lon);
 
         return response()->json($data);
+    }
+
+    /**
+     * Return average weather statistics for the last 24 hours.
+     */
+    public function stats()
+    {
+        $avg = WeatherLog::where('timestamp', '>=', now()->subDay())
+            ->selectRaw('AVG(temperature) as temperature, AVG(humidity) as humidity, AVG(wind_speed) as wind_speed, AVG(pressure) as pressure, AVG(precipitation) as precipitation')
+            ->first();
+
+        return response()->json($avg ?? []);
+    }
+
+    /**
+     * Naive prediction for the next hour based on recent measurements.
+     */
+    public function predict()
+    {
+        $logs = WeatherLog::orderByDesc('timestamp')->limit(6)->get();
+        if ($logs->isEmpty()) {
+            return response()->json([]);
+        }
+
+        return response()->json([
+            'temperature' => round($logs->avg('temperature'), 1),
+            'humidity' => round($logs->avg('humidity')),
+            'wind_speed' => round($logs->avg('wind_speed'), 1),
+            'pressure' => round($logs->avg('pressure')),
+            'precipitation' => round($logs->avg('precipitation'), 1),
+        ]);
     }
 }

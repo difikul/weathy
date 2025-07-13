@@ -17,4 +17,6 @@ return [
     'layer_clouds' => 'Oblačnost',
     'layer_pressure' => 'Tlak',
     'layer_radar' => 'Srážkový radar',
+    'stats_last_24h' => 'Průměry za 24h',
+    'prediction_next' => 'Odhad na další hodinu',
 ];
