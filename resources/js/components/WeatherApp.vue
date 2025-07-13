@@ -1,9 +1,8 @@
 <template>
   <div class="flex h-screen" id="app-root">
-    <aside class="w-80 bg-white/80 dark:bg-slate-800 p-4 overflow-y-auto">
+    <aside class="w-80 bg-gray-100 p-4 overflow-y-auto">
       <div class="flex justify-between items-center mb-4">
         <h1 class="text-xl font-bold">{{ trans.title }}</h1>
-        <button id="theme-btn" class="px-2">🌓</button>
       </div>
       <div class="space-y-2 mb-3">
         <input v-model="city" @keyup.enter="search" :placeholder="trans.enter_city" class="w-full border rounded px-2 py-1" />
@@ -22,6 +21,9 @@
           <option value="pressure_new">{{ trans.layer_pressure }}</option>
           <option value="radar">{{ trans.layer_radar }}</option>
         </select>
+        <div v-if="layer === 'radar' && frames" class="mt-2">
+          <input type="range" :max="frames - 1" min="0" v-model.number="radarIndex" class="w-full" />
+        </div>
       </div>
       <div v-if="weather" class="mb-3">
         <h2 class="font-semibold text-lg">{{ weather.name }}</h2>
@@ -52,13 +54,15 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { fetchWeather, fetchForecast, initMap, updateMapLayer, setupTheme } from '../weather';
+import { ref, onMounted, watch } from 'vue';
+import { fetchWeather, fetchForecast, initMap, updateMapLayer, getRainViewerFrameCount, setRadarFrame } from '../weather';
 
 const city = ref('');
 const layer = ref('precipitation_new');
 const weather = ref(null);
 const forecast = ref([]);
+const radarIndex = ref(0);
+const frames = ref(0);
 const recent = window.recentLocations || [];
 const trans = window.trans;
 
@@ -66,7 +70,12 @@ async function loadWeather(params) {
   weather.value = await fetchWeather(params);
   if (weather.value.coord) {
     await initMap(weather.value.coord.lat, weather.value.coord.lon);
-    await updateMapLayer(layer.value);
+    await updateMapLayer(layer.value).then(() => {
+      if (layer.value === 'radar') {
+        frames.value = getRainViewerFrameCount();
+        radarIndex.value = frames.value - 1;
+      }
+    });
     forecast.value = await fetchForecast({ lat: weather.value.coord.lat, lon: weather.value.coord.lon });
   }
 }
@@ -84,11 +93,25 @@ function currentLocation() {
 }
 
 function changeLayer() {
-  updateMapLayer(layer.value);
+  updateMapLayer(layer.value).then(() => {
+    if (layer.value === 'radar') {
+      frames.value = getRainViewerFrameCount();
+      radarIndex.value = frames.value - 1;
+    }
+  });
 }
 
+watch(radarIndex, () => {
+  setRadarFrame(radarIndex.value);
+});
+
 onMounted(() => {
-  setupTheme('theme-btn');
+  updateMapLayer(layer.value).then(() => {
+    if (layer.value === 'radar') {
+      frames.value = getRainViewerFrameCount();
+      radarIndex.value = frames.value - 1;
+    }
+  });
 });
 </script>
 
