@@ -55,20 +55,26 @@
 
 <script setup>
 import { ref, onMounted, watch } from 'vue';
-import { fetchWeather, fetchForecast, initMap, updateMapLayer, getRainViewerFrameCount, setRadarFrame } from '../weather';
+import { useWeatherStore } from '../store/weather';
+import { storeToRefs } from 'pinia';
+import { initMap, updateMapLayer, getRainViewerFrameCount, setRadarFrame } from '../weather';
 
 const city = ref('');
 const layer = ref('precipitation_new');
-const weather = ref(null);
-const forecast = ref([]);
+const store = useWeatherStore();
+const { current: weather, forecast } = storeToRefs(store);
 const radarIndex = ref(0);
 const frames = ref(0);
 const recent = window.recentLocations || [];
 const trans = window.trans;
 
 async function loadWeather(params) {
-  weather.value = await fetchWeather(params);
-  if (weather.value.coord) {
+  if (params.city) {
+    await store.loadByCity(params.city);
+  } else if (params.lat && params.lon) {
+    await store.loadByCoords(params.lat, params.lon);
+  }
+  if (weather.value?.coord) {
     await initMap(weather.value.coord.lat, weather.value.coord.lon);
     await updateMapLayer(layer.value).then(() => {
       if (layer.value === 'radar') {
@@ -76,7 +82,6 @@ async function loadWeather(params) {
         radarIndex.value = frames.value - 1;
       }
     });
-    forecast.value = await fetchForecast({ lat: weather.value.coord.lat, lon: weather.value.coord.lon });
   }
 }
 
