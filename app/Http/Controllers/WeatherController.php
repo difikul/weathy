@@ -14,10 +14,17 @@ class WeatherController extends Controller
      */
     public function index(Request $request)
     {
-        $lang = $request->query('lang', config('app.locale'));
-        app()->setLocale($lang);
+        app()->setLocale('cs');
 
-        $locations = Location::orderByDesc('created_at')->get();
+        $locations = Location::orderByDesc('created_at')->get()->map(function ($loc) {
+            return [
+                'id' => $loc->id,
+                'name' => $loc->name,
+                'latitude' => $loc->latitude,
+                'longitude' => $loc->longitude,
+                'created_at' => $loc->created_at->locale('cs')->isoFormat('D. M. YYYY H:mm'),
+            ];
+        });
 
         return view('weather', [
             'locations' => $locations,
@@ -119,6 +126,23 @@ class WeatherController extends Controller
             'appid' => $apiKey,
         ])->json();
 
-        return response()->json($forecast);
+        $list = $forecast['list'] ?? [];
+        $days = [];
+        foreach ($list as $item) {
+            $date = \Carbon\Carbon::createFromTimestamp($item['dt'])->locale('cs');
+            $dayKey = $date->toDateString();
+            $days[$dayKey][] = $item;
+        }
+        $result = [];
+        foreach ($days as $day => $items) {
+            $date = \Carbon\Carbon::parse($day)->locale('cs');
+            $avg = collect($items)->avg(fn ($d) => $d['main']['temp']);
+            $result[] = [
+                'date' => $date->isoFormat('dddd D. M.'),
+                'temp' => round($avg, 1),
+            ];
+        }
+
+        return response()->json($result);
     }
 }
