@@ -3,12 +3,15 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-
 use Illuminate\Support\Facades\Http;
 use App\Models\Location;
+use App\Services\WeatherAggregator;
 
 class WeatherController extends Controller
 {
+    public function __construct(protected WeatherAggregator $aggregator)
+    {
+    }
     /**
      * Display the weather application page.
      */
@@ -144,5 +147,20 @@ class WeatherController extends Controller
         }
 
         return response()->json($result);
+    }
+
+    /**
+     * Return combined weather data from multiple APIs.
+     */
+    public function combined(Request $request)
+    {
+        $request->validate([
+            'lat' => 'required|numeric',
+            'lon' => 'required|numeric',
+        ]);
+
+        $data = $this->aggregator->aggregate($request->lat, $request->lon);
+
+        return response()->json($data);
     }
 }
