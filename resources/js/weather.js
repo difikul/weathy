@@ -22,7 +22,39 @@ async function fetchWeather(params) {
     showWeather(json);
     if (json.coord) {
         initMap(json.coord.lat, json.coord.lon);
+        fetchForecast({lat: json.coord.lat, lon: json.coord.lon});
     }
+}
+
+async function fetchForecast(params) {
+    const query = new URLSearchParams(params);
+    const res = await fetch(`/api/forecast?${query}`);
+    const json = await res.json();
+    showForecast(json);
+}
+
+function showForecast(data) {
+    const card = document.getElementById('forecast');
+    const box = card.querySelector('.card-body');
+    if (!data.list) {
+        card.style.display = 'none';
+        return;
+    }
+    card.style.display = 'block';
+    const days = {};
+    data.list.forEach(item => {
+        const day = item.dt_txt.split(' ')[0];
+        days[day] = days[day] || [];
+        days[day].push(item);
+    });
+    let html = `<h5 class="card-title">${window.trans.forecast}</h5>`;
+    html += '<div class="d-flex flex-wrap gap-3">';
+    Object.keys(days).slice(0,5).forEach(day => {
+        const avg = days[day].reduce((acc, d) => acc + d.main.temp, 0) / days[day].length;
+        html += `<div><div class="fw-semibold">${day}</div><div>${avg.toFixed(1)}°C</div></div>`;
+    });
+    html += '</div>';
+    box.innerHTML = html;
 }
 
 function initMap(lat, lon) {
@@ -68,3 +100,16 @@ document.getElementById('current').addEventListener('click', () => {
         fetchWeather({lat: pos.coords.latitude, lon: pos.coords.longitude});
     });
 });
+
+function setupTheme() {
+    const btn = document.getElementById('theme-toggle');
+    const body = document.body;
+    const stored = localStorage.getItem('theme');
+    if (stored === 'dark') body.classList.add('dark');
+    btn.addEventListener('click', () => {
+        body.classList.toggle('dark');
+        localStorage.setItem('theme', body.classList.contains('dark') ? 'dark' : 'light');
+    });
+}
+
+setupTheme();
