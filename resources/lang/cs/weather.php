@@ -7,5 +7,7 @@ return [
     'recent_searches' => 'Nedávná hledání',
     'humidity' => 'Vlhkost',
     'wind' => 'Rychlost větru',
-    'radar_credit' => 'Radarová data © <a href="https://www.rainviewer.com" target="_blank" rel="noopener">RainViewer</a>'
+    'radar_credit' => 'Radarová data © <a href="https://www.rainviewer.com" target="_blank" rel="noopener">RainViewer</a>',
+    'toggle_theme' => 'Přepnout téma',
+    'forecast' => 'Předpověď na 5 dní'
 ];

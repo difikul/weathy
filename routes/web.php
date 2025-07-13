@@ -6,3 +6,4 @@ use App\Http\Controllers\WeatherController;
 
 Route::get('/', [WeatherController::class, 'index']);
 Route::get('/api/weather', [WeatherController::class, 'getWeather']);
+Route::get('/api/forecast', [WeatherController::class, 'getForecast']);

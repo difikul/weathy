@@ -75,4 +75,50 @@ class WeatherController extends Controller
 
         return response()->json($weather);
     }
+
+    /**
+     * Return 5 day forecast for provided coordinates or city.
+     */
+    public function getForecast(Request $request)
+    {
+        $request->validate([
+            'lat' => 'nullable|numeric',
+            'lon' => 'nullable|numeric',
+            'city' => 'nullable|string',
+        ]);
+
+        $lat = $request->lat;
+        $lon = $request->lon;
+        $city = $request->city;
+
+        $apiKey = config('services.openweather.key');
+
+        if ($city) {
+            $geo = Http::get('https://api.openweathermap.org/geo/1.0/direct', [
+                'q' => $city,
+                'limit' => 1,
+                'appid' => $apiKey,
+            ])->json();
+
+            if (!empty($geo[0])) {
+                $lat = $geo[0]['lat'];
+                $lon = $geo[0]['lon'];
+            } else {
+                return response()->json(['error' => 'Location not found'], 404);
+            }
+        }
+
+        if ($lat === null || $lon === null) {
+            return response()->json(['error' => 'Coordinates required'], 422);
+        }
+
+        $forecast = Http::get('https://api.openweathermap.org/data/2.5/forecast', [
+            'lat' => $lat,
+            'lon' => $lon,
+            'units' => 'metric',
+            'appid' => $apiKey,
+        ])->json();
+
+        return response()->json($forecast);
+    }
 }
